@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use std::rc::Weak;
+use std::borrow::BorrowMut;
 
 /************************* B+ TREE IMPLEMENTATION *************************/
 
@@ -65,39 +66,43 @@ impl<K: Ord + Copy, V: Copy> BPlusTree<K, V> {
                 values: Vec::new(),
             })));
         }
-        
+
+        let mut root = self.root.as_mut().unwrap();
+        let root = Rc::get_mut(&mut root).expect("Someone else is borrowing our root");
+
         /* Insert the key / value into the leaf */
-        match self.root { /* unwrap the option */
-            None => panic!("This can't happen"),
-            Some(ref mut node_rc) => {
-            
-                /* ------> this line produces a compiler error */
-                let mut node = Rc::get_mut(node_rc).unwrap(); /* unwrap the Rc */
-                
-                match node { /* unwrap the BPlusNode enum */
-                    BPlusNode::Interior(ref mut interior) => {
-                        //TODO: implement interior nodes
-                        panic!("This also can't happen yet") 
-                    },
-                    BPlusNode::Leaf(ref mut leaf) => {
-                        leaf.keys.push(*key);
-                        leaf.values.push(*value);
-                        //TODO: implement node splitting + tree growth
-                    }
-                }
+        match root {
+            BPlusNode::Interior(ref mut interior) => {
+                //TODO: implement interior nodes
+                panic!("This also can't happen yet")
+            },
+            BPlusNode::Leaf(ref mut leaf) => {
+                leaf.keys.push(key.clone());
+                leaf.values.push(value.clone());
+                //TODO: implement node splitting + tree growth
             }
         }
     }
 }
 
 /************************* TESTING PROGRAM *************************/
+#[cfg(test)]
+mod tests {
+    use BPlusTree;
 
-/* Dummy value type for testing */
-#[derive(Debug, Copy, Clone)]
-struct TestData {
-    data: [u64;  4],
-}
+    #[test]
+    fn test_new() {
+        let bpt = BPlusTree::<u64, u64>::new();
+    }
 
-fn main() {
-    let tree: BPlusTree<u64, TestData> = BPlusTree::new();
+    #[test]
+    fn test_insert() {
+        let mut bpt = BPlusTree::<u64, u64>::new();
+
+        let k = 7 as u64;
+        let v = 14 as u64;
+
+        bpt.insert(&k, &v);
+    }
+
 }

@@ -77,9 +77,43 @@ impl<K: Ord + Copy, V: Copy> BPlusTree<K, V> {
                 panic!("This also can't happen yet")
             },
             BPlusNode::Leaf(ref mut leaf) => {
+                if leaf.keys.len() >= 4 {
+                    //TODO: implement node splitting + tree growth
+                    let mut left = BPlusLeaf {
+                        parent: None,
+                        keys: Vec::new(),
+                        values: Vec::new(),
+                    };
+
+                    let mut right = BPlusLeaf {
+                        parent: None,
+                        keys: Vec::new(),
+                        values: Vec::new(),
+                    };
+
+                    for i in 0..(leaf.keys.len()/2) {
+                        left.keys.push(leaf.keys[i]);
+                        left.values.push(leaf.values[i]);
+                    }
+
+                    for i in (leaf.keys.len()/2)..leaf.keys.len() {
+                        right.keys.push(leaf.keys[i]);
+                        right.values.push(leaf.values[i]);
+                    }
+
+                    let left = Rc::new(BPlusNode::Leaf(left));
+                    let right = Rc::new(BPlusNode::Leaf(right));
+
+                    let inner = BPlusNode::Interior(BPlusInterior {
+                        parent: leaf.parent.clone(),
+                        keys: Vec::new(),
+                        children: vec![left, right]
+                    });
+
+                }
+
                 leaf.keys.push(key.clone());
                 leaf.values.push(value.clone());
-                //TODO: implement node splitting + tree growth
             }
         }
     }
